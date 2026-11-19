@@ -30,7 +30,7 @@ jobs:
           go install github.com/tc-hib/go-winres@v0.3.3
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $winres = Join-Path (go env GOPATH) 'bin\go-winres.exe'
-          & $winres simply --arch 386 --icon assets/sify-pdv.ico --manifest none --product-name "Sify PDV" --product-version 1.2.0 --file-version 1.2.0 --file-description "Sify Comércio para Windows" --original-filename SifyPDV.exe
+          & $winres simply --arch 386 --icon assets/sify-pdv.ico --manifest none --product-name "Sify PDV" --product-version 1.2.1 --file-version 1.2.1 --file-description "Sify Comércio para Windows" --original-filename SifyPDV.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:GOARCH = '386'
           go vet ./...
@@ -121,7 +121,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.2.0-beta.1 SifyPDV-Setup.exe \
+          gh release create v1.2.1-beta.1 SifyPDV-Setup.exe \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-            --title "Sify PDV para Windows 1.2.0 beta 1" \
-            --notes "Ícone personalizado no executável e no instalador. Nova tela de abertura da Sify Comércio enquanto a janela do caixa inicia. Mantém o perfil existente. Instalador de homologação sem assinatura digital."
+            --title "Sify PDV para Windows 1.2.1 beta 1" \
+            --notes "Ícone personalizado no executável e no instalador. O PDV abre diretamente em tela cheia e mantém o perfil existente. Instalador de homologação sem assinatura digital."

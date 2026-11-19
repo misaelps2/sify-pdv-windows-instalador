@@ -46,10 +46,6 @@ func launch() error {
 		return errors.New("Não foi possível abrir a pasta de dados do Sify PDV: " + err.Error())
 	}
 
-	// Use monitor coordinates consistently before creating the splash or sizing Edge.
-	user32.NewProc("SetThreadDpiAwarenessContext").Call(^uintptr(3)) // PER_MONITOR_AWARE_V2
-	splash := openSplash()
-	defer splash.close()
 	cmd := exec.Command(edge,
 		"--user-data-dir="+profile,
 		"--app="+pdvURL,
@@ -61,7 +57,7 @@ func launch() error {
 		return errors.New("Não foi possível iniciar o Microsoft Edge: " + err.Error())
 	}
 	defer cmd.Process.Release()
-	return runWindow(uint32(cmd.Process.Pid), &splash)
+	return runWindow(uint32(cmd.Process.Pid))
 }
 
 func findEdge(local string) (string, error) {
