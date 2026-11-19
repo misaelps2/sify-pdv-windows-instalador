@@ -27,6 +27,11 @@ jobs:
           New-Item -ItemType Directory -Force dist
           go test ./...
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go install github.com/tc-hib/go-winres@v0.3.3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $winres = Join-Path (go env GOPATH) 'bin\go-winres.exe'
+          & $winres simply --arch 386 --icon assets/sify-pdv.ico --manifest none --product-name "Sify PDV" --product-version 1.2.0 --file-version 1.2.0 --file-description "Sify Comércio para Windows" --original-filename SifyPDV.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:GOARCH = '386'
           go vet ./...
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -48,6 +53,19 @@ jobs:
           $desktop = [Environment]::GetFolderPath('DesktopDirectory')
           $shortcut = Join-Path $desktop 'Sify PDV.lnk'
           if (!(Test-Path $shortcut)) { throw 'Atalho ausente' }
+          Add-Type @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class IconCheck {
+            [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+            public static extern uint ExtractIconEx(string path, int index, IntPtr large, IntPtr small, uint count);
+          }
+          '@
+          foreach ($file in @((Join-Path $app 'SifyPDV.exe'), (Resolve-Path dist/SifyPDV-Setup.exe).Path)) {
+            if ([IconCheck]::ExtractIconEx($file, -1, [IntPtr]::Zero, [IntPtr]::Zero, 0) -eq 0) {
+              throw "Ícone ausente em $file"
+            }
+          }
           $launcher = Start-Process (Join-Path $app 'SifyPDV.exe') -PassThru
           $browser = $null
           for ($i = 0; $i -lt 20 -and !$browser; $i++) {
@@ -103,7 +121,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.1.0-beta.1 SifyPDV-Setup.exe \
+          gh release create v1.2.0-beta.1 SifyPDV-Setup.exe \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-            --title "Sify PDV para Windows 1.1.0 beta 1" \
-            --notes "Abre o PDV em tela cheia e bloqueia atalhos de atualização e inspeção na janela do caixa. Mantém o perfil existente. Instalador de homologação sem assinatura digital."
+            --title "Sify PDV para Windows 1.2.0 beta 1" \
+            --notes "Ícone personalizado no executável e no instalador. Nova tela de abertura da Sify Comércio enquanto a janela do caixa inicia. Mantém o perfil existente. Instalador de homologação sem assinatura digital."

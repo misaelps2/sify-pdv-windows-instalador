@@ -94,15 +94,14 @@ func keyDown(vk uintptr) bool {
 	return state&0x8000 != 0
 }
 
-func runWindow(pid uint32) error {
-	// Match monitor coordinates to the Edge window even on mixed-DPI displays.
-	user32.NewProc("SetThreadDpiAwarenessContext").Call(^uintptr(3)) // PER_MONITOR_AWARE_V2
+func runWindow(pid uint32, splash *startupSplash) error {
 	var window uintptr
 	for deadline := time.Now().Add(20 * time.Second); time.Now().Before(deadline); {
 		window = findWindow(pid)
 		if window != 0 {
 			break
 		}
+		splash.repaint()
 		time.Sleep(100 * time.Millisecond)
 	}
 	if window == 0 {
@@ -111,6 +110,8 @@ func runWindow(pid uint32) error {
 	if err := fullscreen(window); err != nil {
 		return err
 	}
+
+	splash.close()
 
 	next := user32.NewProc("CallNextHookEx")
 	callback := syscall.NewCallback(func(code int32, event uintptr, vk *uint32) uintptr {

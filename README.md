@@ -1,6 +1,6 @@
 # Sify PDV para Windows
 
-O instalador cria atalhos no menu Iniciar e na área de trabalho. O atalho abre **https://pdv.sifysistemas.com/** em uma janela de aplicativo do Microsoft Edge. A janela abre em tela cheia, sem a barra superior. Use **Alt+F4** para fechar e **Alt+Tab** para alternar para outro aplicativo. Dentro do PDV, F5, F11, F12 e os atalhos comuns de recarga e inspeção ficam bloqueados. Isso limita o uso desses atalhos no caixa. O código do site entregue ao navegador continua acessível por outros meios.
+O instalador cria atalhos no menu Iniciar e na área de trabalho. O atalho abre **https://pdv.sifysistemas.com/** em uma janela de aplicativo do Microsoft Edge. O atalho exibe o ícone da Sify Comércio e mostra uma tela de abertura enquanto a janela inicia. A janela abre em tela cheia, sem a barra superior. Use **Alt+F4** para fechar e **Alt+Tab** para alternar para outro aplicativo. Dentro do PDV, F5, F11, F12 e os atalhos comuns de recarga e inspeção ficam bloqueados. Isso limita o uso desses atalhos no caixa. O código do site entregue ao navegador continua acessível por outros meios.
 
 A página e as atualizações vêm do mesmo endereço usado no navegador. A instalação é por usuário, sem pedir acesso de administrador.
 
@@ -25,12 +25,15 @@ O perfil novo começa separado. Configurações vinculadas à sessão ou ao disp
 
 ## Compilar
 
-Requisitos: Go 1.25+ e NSIS 3.x. O lançador é compilado para Windows x86 e também roda em Windows x64. O GitHub Actions empacota o instalador e verifica a instalação, a abertura no Edge com perfil dedicado e a preservação da pasta do perfil na desinstalação.
+Requisitos: Go 1.25+ e NSIS 3.x. O go-winres gera o recurso de ícone na compilação. O lançador é compilado para Windows x86 e também roda em Windows x64. O GitHub Actions empacota o instalador e verifica a instalação, a abertura no Edge com perfil dedicado e a preservação da pasta do perfil na desinstalação.
 
 No Windows, com Go e NSIS disponíveis no PATH:
 
 ```powershell
 New-Item -ItemType Directory -Force dist
+go install github.com/tc-hib/go-winres@v0.3.3
+$winres = Join-Path (go env GOPATH) 'bin\go-winres.exe'
+& $winres simply --arch 386 --icon assets/sify-pdv.ico --manifest none --product-name "Sify PDV" --product-version 1.2.0 --file-version 1.2.0 --file-description "Sify Comércio para Windows" --original-filename SifyPDV.exe
 $env:GOOS = "windows"
 $env:GOARCH = "386"
 go build -trimpath -ldflags="-s -w -H windowsgui" -o dist/SifyPDV.exe .
