@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -19,6 +20,17 @@ func main() {
 }
 
 func launch() error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	mutex, acquired := lockLauncher()
+	if mutex == 0 {
+		return errors.New("Não foi possível iniciar o controle da janela do PDV.")
+	}
+	defer syscall.CloseHandle(syscall.Handle(mutex))
+	if !acquired {
+		return nil
+	}
+
 	local := os.Getenv("LOCALAPPDATA")
 	if local == "" {
 		return errors.New("O Windows não informou a pasta de dados do usuário.")
@@ -39,11 +51,13 @@ func launch() error {
 		"--app="+pdvURL,
 		"--no-first-run",
 		"--no-default-browser-check",
+		"--disable-background-mode",
 	)
 	if err := cmd.Start(); err != nil {
 		return errors.New("Não foi possível iniciar o Microsoft Edge: " + err.Error())
 	}
-	return cmd.Process.Release()
+	defer cmd.Process.Release()
+	return runWindow(uint32(cmd.Process.Pid))
 }
 
 func findEdge(local string) (string, error) {

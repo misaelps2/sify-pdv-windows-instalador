@@ -25,6 +25,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist
+          go test ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:GOARCH = '386'
           go vet ./...
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -47,7 +49,6 @@ jobs:
           $shortcut = Join-Path $desktop 'Sify PDV.lnk'
           if (!(Test-Path $shortcut)) { throw 'Atalho ausente' }
           $launcher = Start-Process (Join-Path $app 'SifyPDV.exe') -PassThru
-          if (!$launcher.WaitForExit(30000) -or $launcher.ExitCode -ne 0) { throw 'Falha ao iniciar o PDV' }
           $browser = $null
           for ($i = 0; $i -lt 20 -and !$browser; $i++) {
             $browser = Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" |
@@ -55,6 +56,26 @@ jobs:
             if (!$browser) { Start-Sleep -Milliseconds 500 }
           }
           if (!$browser) { throw 'O Edge não abriu o endereço com o perfil exclusivo' }
+          Add-Type @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class WindowCheck {
+            [DllImport("user32.dll")] public static extern int GetWindowLongW(IntPtr window, int index);
+          }
+          '@
+          $edge = Get-Process -Id $browser[0].ProcessId
+          $borderless = $false
+          for ($i = 0; $i -lt 40 -and !$borderless; $i++) {
+            $edge.Refresh()
+            if ($edge.MainWindowHandle -ne 0) {
+              $borderless = ([WindowCheck]::GetWindowLongW($edge.MainWindowHandle, -16) -band 0x00C40000) -eq 0
+            }
+            if (!$borderless) { Start-Sleep -Milliseconds 500 }
+          }
+          if (!$borderless) { throw 'A moldura do navegador permaneceu visível' }
+          if (!$edge.CloseMainWindow() -or !$launcher.WaitForExit(30000) -or $launcher.ExitCode -ne 0) {
+            throw 'O controlador do PDV não encerrou junto com a janela'
+          }
           $profile = Join-Path $env:LOCALAPPDATA 'Sify PDV\Perfil'
           $marker = Join-Path $profile 'teste-preservacao.txt'
           Set-Content -Path $marker -Value 'preservar'
@@ -82,7 +103,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.0.0-beta.1 SifyPDV-Setup.exe \
+          gh release create v1.1.0-beta.1 SifyPDV-Setup.exe \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-            --title "Sify PDV para Windows 1.0.0 beta 1" \
-            --notes "Abre o PDV em janela própria com perfil separado. Para migrar dados, veja o README. Instalador de homologação sem assinatura digital."
+            --title "Sify PDV para Windows 1.1.0 beta 1" \
+            --notes "Abre o PDV em tela cheia e bloqueia atalhos de atualização e inspeção na janela do caixa. Mantém o perfil existente. Instalador de homologação sem assinatura digital."

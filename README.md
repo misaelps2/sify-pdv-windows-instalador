@@ -1,8 +1,12 @@
 # Sify PDV para Windows
 
-O instalador cria atalhos no menu Iniciar e na área de trabalho. O atalho abre **https://pdv.sifysistemas.com/** em uma janela de aplicativo do Microsoft Edge. A página e as atualizações vêm do mesmo endereço usado no navegador. A instalação é por usuário, sem pedir acesso de administrador.
+O instalador cria atalhos no menu Iniciar e na área de trabalho. O atalho abre **https://pdv.sifysistemas.com/** em uma janela de aplicativo do Microsoft Edge. A janela abre em tela cheia, sem a barra superior. Use **Alt+F4** para fechar e **Alt+Tab** para alternar para outro aplicativo. Dentro do PDV, F5, F11, F12 e os atalhos comuns de recarga e inspeção ficam bloqueados. Isso limita o uso desses atalhos no caixa. O código do site entregue ao navegador continua acessível por outros meios.
+
+A página e as atualizações vêm do mesmo endereço usado no navegador. A instalação é por usuário, sem pedir acesso de administrador.
 
 Requisitos: Windows 10 ou 11 e Microsoft Edge (versão estável). Abra o PDV pela primeira vez com internet e aguarde o carregamento e a ativação do caixa. Depois, o funcionamento offline depende do cache e das funções offline do próprio PDV. O Sify Print continua sendo instalado à parte para emissão de cupons.
+
+Feche a janela antiga do Sify PDV antes de atualizar o instalador. A atualização reutiliza o perfil existente.
 
 ## Dados e backup
 
